@@ -1,0 +1,172 @@
+﻿@page "/tracuuTin03"
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<style>
+    .tracuu_container {
+   
+    }
+.tracuu_title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        color: #004b8d;
+        margin-bottom: 20px;
+        margin-top: 10px;
+    }
+    .form-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .form-label {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .form-input {
+        width: 200px;
+        padding: 6px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .btn-search {
+        width: 80px;
+        background-color: #007bff;
+        color: white;
+        padding: 6px;
+        border: none;
+        font-size: 14px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn-search:hover {
+        background-color: #0056b3;
+    }
+    .RequiredValidator {
+        color: red;
+        font-size: 13px;
+        font-style: italic;
+        margin-top: 5px;
+    }
+
+    .tracuu_table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .tracuu_table thead td {
+        background-color: #007bff;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 14px;
+        padding: 12px;
+        text-align: center;
+    }
+
+    .tracuu_table tbody td {
+        color: #444;
+        border: 1px solid #ddd;
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    .tracuu_table tbody tr:nth-child(odd) {
+        background-color: #f9fafb;
+    }
+
+</style>
+
+<div class="tracuu_container">
+    <h3 class="tracuu_title">TRA CỨU THÔNG TIN THI CHỨNG CHỈ ỨNG DỤNG CNTT</h3>
+    <RadzenTemplateForm TItem="TracuuTT" Data=@item Submit=@OnSubmit>
+        <div class="form-group">
+            <label class="form-label">CCCD</label>
+            <RadzenTextBox class="form-input" Name="CCCD" @bind-Value=@item.CCCD />
+            <RadzenButton class="btn-search" ButtonType="ButtonType.Submit" Text="Tìm" />
+        </div>
+
+        <div class="RequiredValidator">
+            <RadzenRequiredValidator Component="CCCD" Text="Nhập CCCD" />
+        </div>
+    </RadzenTemplateForm>
+
+    @if (dsTin != null && dsTin.Any())
+    {
+        <table class="tracuu_table">
+            <thead>
+                <tr>
+                    <td>Thông tin thí sinh</td>
+                    <td>Thông tin đợt thi</td>
+                    <td>Thông tin thanh toán</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var it in dsTin)
+                {
+                    <tr>
+                        <td>
+                            <div><strong>CCCD:</strong> @it.CCCD</div>
+                            <div><strong>Họ tên:</strong> @it.HovaDem @it.Ten</div>
+                        </td>
+                        <td>
+                            <div><strong>Đợt thi:</strong> @it.DotThi, <strong>Phòng:</strong> @it.PhongThi</div>
+                            <div><strong>SBD:</strong> @it.SoBD</div>
+                            <div><strong>Điểm LT:</strong> @it.DiemLT, <strong>Điểm TH:</strong> @it.DiemTH</div>
+                        </td>
+                        <td>
+                            <div><strong>Lệ phí thi:</strong> @it.LePhiThi, <strong>Lệ phí ôn:</strong> @it.LePhiOn</div>
+                            <div>
+                                @if (it.PaymentSuccess != null && it.PaymentSuccess.Value)
+                                {
+                                    <span style="color: green; font-weight: bold;">Đã thanh toán</span>
+                                }
+                                else
+                                {
+                                    <span style="color: red; font-weight: bold;">Chưa thanh toán</span>
+                                }
+                            </div>
+                            <div><a href="/Tinhoc03Detail/@it.Id" style="color: #007bff; text-decoration: none;">Xem chi tiết</a></div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    string ErrMessage = "";
+    TracuuTT item = new TracuuTT();
+    public List<DangkyTH03> dsTin;
+    public List<DKHocView> dsDKHoc;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+    protected async Task OnSubmit()
+    {
+        //var response = await Http.PutAsJsonAsync("api/Khoahoc/KhoahocUpdate", @item);
+        dsTin = await Http.GetFromJsonAsync<List<DangkyTH03>>("api/DangkyTH03/TH03GetByCCCD/" + item.CCCD);
+        
+
+    }
+    void Cancel()
+    {
+        //NavigationManager.NavigateTo("KhoahocList");
+    }
+}

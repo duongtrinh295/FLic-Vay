@@ -1,0 +1,203 @@
+﻿@page "/tracuuhp"
+
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<style>
+    .tracuu_container {
+      
+    }
+
+    .tracuu_title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        color: #004b8d;
+        margin-bottom: 20px;
+        margin-top: 10px;
+    }
+
+    /* Form nhập liệu */
+    .form-group {
+        display: flex;
+        align-items: center;
+        justify-content: left;
+        margin-bottom: 15px;
+    }
+
+    .form-label {
+        width: 120px;
+        font-weight: bold;
+        font-size: 14px;
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .form-input {
+        width: 200px; /* Giới hạn chiều ngang */
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .btn-container {
+        margin-left: 10px; /* Đẩy nút tìm gần với ô nhập */
+    }
+
+    .btn-search {
+        width: 100px; /* Kích thước gần bằng ô nhập */
+        background-color: #007bff;
+        color: white;
+        padding: 8px;
+        border: none;
+        font-size: 14px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn-search:hover {
+        background-color: #0056b3;
+    }
+
+    /* Bảng kết quả */
+    .tracuu_table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .tracuu_table th, .tracuu_table td {
+        padding: 12px;
+        text-align: center;
+        border: 1px solid #ddd;
+    }
+
+    .tracuu_table thead {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .tracuu_table tbody tr:nth-child(odd) {
+        background-color: #f9fafb;
+    }
+
+    .tracuu_table tbody tr:nth-child(even) {
+        background-color: #ffffff;
+    }
+
+    .tracuu_table tbody td {
+        font-size: 14px;
+        color: #444;
+    }
+
+    /* Trạng thái thanh toán */
+    .status-paid {
+        color: green;
+        font-weight: bold;
+    }
+
+    .status-unpaid {
+        color: red;
+        font-weight: bold;
+    }
+        .RequiredValidator {
+        color: red;
+        font-size: 15px;
+        margin-top: 5px;
+        margin-left: 30px;
+    }
+
+</style>
+
+<div class="tracuu_container">
+    <h3 class="tracuu_title">TRA CỨU THÔNG TIN HỌC PHÍ</h3>
+    <RadzenTemplateForm TItem="TracuuTT" Data=@item Submit=@OnSubmit>
+        <div class="form-group">
+            <label class="form-label">Mã sinh viên</label>
+            <RadzenTextBox class="form-input" Name="CCCD" @bind-Value=@item.CCCD />
+            <div class="btn-container">
+                <RadzenButton class="btn-search" ButtonType="ButtonType.Submit" Text="Tìm" />
+            </div>
+             <div class="RequiredValidator">
+                <RadzenRequiredValidator Component="CCCD" Text="Nhập MSV" />
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+    @if (ThuTienList != null && ThuTienList.Any())
+    {
+        <table class="tracuu_table">
+            <thead>
+                <tr>
+                    <th>Mã sinh viên</th>
+                    <th>Họ tên</th>
+                    <th>Khóa</th>
+                    <th>Lớp</th>
+                    <th>Loại khoản thu</th>
+                    <th>Kỳ thanh toán</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var it in ThuTienList)
+                {
+                    <tr>
+                        <td>@it.MaSinhVien</td>
+                        <td>@it.HoDem @it.Ten</td>
+                        <td>@it.KhoahocID</td>
+                        <td>@it.LopID</td>
+                        <td>@it.LoaiKhoanthuID</td>
+                        <td>@it.KyThanhToan</td>
+                        <td>
+                            @if (it.TrangThai == 1)
+                            {
+                                <span class="status-paid">Đã thanh toán</span>
+                            }
+                            else
+                            {
+                                <span class="status-unpaid">Chưa thanh toán</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    string ErrMessage = "";
+    TracuuTT item = new TracuuTT();
+    //public List<DangkyTH03> dsTin;
+    //public List<DKHocView> dsDKHoc;
+    List<ThuTienView> ThuTienList = new List<ThuTienView>();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+    protected async Task OnSubmit()
+    {
+        //var response = await Http.PutAsJsonAsync("api/Khoahoc/KhoahocUpdate", @item);
+        var response = await Http.GetAsync("api/Thutien/ThutienGetByMSV/" + item.CCCD);
+        
+        if (response.IsSuccessStatusCode)
+        {
+            ThuTienList = await response.Content.ReadFromJsonAsync<List<ThuTienView>>();
+
+            this.StateHasChanged();
+        }
+
+    }
+    void Cancel()
+    {
+        //NavigationManager.NavigateTo("KhoahocList");
+    }
+}

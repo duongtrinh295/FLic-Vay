@@ -1,0 +1,203 @@
+﻿@page "/tracuu"
+
+@using Flic.Shared
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+<style>
+    .tracuu-container {
+    }
+
+  .tracuu_title {
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        color: #004b8d;
+
+        margin-top: 10px;
+    }
+    .tracuu_table {
+        border-collapse: collapse;
+        font-family: Tahoma, Geneva, sans-serif;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .tracuu_table td, .tracuu_table th {
+        padding: 15px;
+        border: 1px solid #dddfe1;
+    }
+
+    .tracuu_table thead td {
+        background-color: #80b3ff;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 14px;
+        text-align: center;
+    }
+
+    .tracuu_table tbody tr:nth-child(odd) {
+        background-color: #f9fafb;
+    }
+
+    .tracuu-form {
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .tracuu-form .row {
+        margin-bottom: 15px;
+    }
+
+    .tracuu-form .col-6 {
+        display: flex;
+        align-items: center;
+    }
+
+    .tracuu-form input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+
+    .tracuu-form button {
+        padding: 10px 15px;
+        border-radius: 4px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+    }
+
+    .tracuu-form button:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<div class="tracuu-container">
+      <h3 class="tracuu_title">TÌM KIẾM THÔNG TIN</h3>
+    <div class="tracuu-form">
+        <RadzenTemplateForm TItem="TracuuTT" Data=@item Submit=@OnSubmit>
+            <div class="row">
+                <div class="col-2"><RadzenLabel Component="CCCD" Text="CCCD" /></div>
+                <div class="col-6"><RadzenTextBox Name="CCCD" @bind-Value=@item.CCCD /></div>
+                <div class="col-2"><RadzenRequiredValidator Component="CCCD" Text="Nhập CCCD" /></div>
+            </div>
+            <div class="row">
+                <div class="col-2"><RadzenLabel Component="Mobile" Text="Điện thoại" /></div>
+                <div class="col-6"><RadzenTextBox Name="Mobile" @bind-Value=@item.Mobile /></div>
+                <div class="col-2"><RadzenRequiredValidator Component="Mobile" Text="Nhập số điện thoại" /></div>
+            </div>
+            <div class="row">
+                <div class="col-2"><RadzenLabel Component="Email" Text="Email" /></div>
+                <div class="col-6"><RadzenTextBox Name="Email" @bind-Value=@item.Email /></div>
+                <div class="col-2"><RadzenRequiredValidator Component="Email" Text="Email" /></div>
+            </div>
+            <div class="row">
+                <div class="col-2"></div>
+                <div class="col-6">
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="Tìm" />
+                </div>
+            </div>
+        </RadzenTemplateForm>
+    </div>
+
+    @if (dsTin != null)
+    {
+        <table class="tracuu_table">
+            <thead>
+                <tr>
+                    <td>Thông tin thí sinh</td>
+                    <td>Thông tin đợt thi</td>
+                    <td>Thông tin thanh toán</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var it in dsTin)
+                {
+                    <tr>
+                        <td>
+                            CCCD: @it.CCCD <br>
+                            Họ tên: @it.HovaDem @it.Ten
+                        </td>
+                        <td>
+                            Đợt thi: @it.DotThi, phòng thi: @it.PhongThi SBD:@it.SoBD <br>
+                            Điểm Lý thuyết: @it.DiemLT, điểm thực hành: @it.DiemTH
+                        </td>
+                        <td>
+                            Lệ phí thi: @it.LePhiThi Lệ phí ôn: @it.LePhiOn <br>
+                            @(it.PaymentSuccess != null && it.PaymentSuccess.Value ? "Đã TT" : "Chưa TT") <br>
+                            <a href="/Tinhoc03Detail/@it.Id">Xem</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (dsDKHoc != null)
+    {
+        <table class="tracuu_table">
+            <thead>
+                <tr>
+                    <td>TT</td>
+                    <td>Họ tên</td>
+                    <td>Địa chỉ</td>
+                    <td>Điện thoại</td>
+                    <td>Email</td>
+                    <td>Lớp học</td>
+                    <td>Thanh toán</td>
+                    <td>&nbsp;</td>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int i = 1; }
+                @foreach (var it in dsDKHoc)
+                {
+                    <tr>
+                        <td>@i</td>
+                        <td>@it.HovaDem @it.Ten</td>
+                        <td>@it.DiaChi</td>
+                        <td>@it.DienThoai</td>
+                        <td>@it.Email</td>
+                        <td>@it.CourseName</td>
+                        <td>@(it.DaThanhtoan != null && it.DaThanhtoan == 1 ? "Đã thanh toán" : "Chưa thanh toán")</td>
+                        <td><a href="/DKHocDetail/@it.Id">Xem</a></td>
+                    </tr>
+                    i++;
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+    string ErrMessage = "";    
+    TracuuTT item = new TracuuTT();
+    public List<DangkyTH03> dsTin;
+    public List<DKHocView> dsDKHoc;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+    protected async Task OnSubmit()
+    {
+        //var response = await Http.PutAsJsonAsync("api/Khoahoc/KhoahocUpdate", @item);
+        dsTin = await Http.GetFromJsonAsync<List<DangkyTH03>>("api/DangkyTH03/TH03GetByCCCD/" + item.CCCD);
+        dsDKHoc = await Http.GetFromJsonAsync<List<DKHocView>>("api/DKHoc/DKHocGetByMobile/" + item.Mobile);
+        if (dsDKHoc == null)
+        {
+            dsDKHoc = await Http.GetFromJsonAsync<List<DKHocView>>("api/DKHoc/DKHocGetByEmail/" + item.Email);
+        }
+
+    }
+    void Cancel()
+    {
+        //NavigationManager.NavigateTo("KhoahocList");
+    }
+}
